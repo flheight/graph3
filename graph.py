@@ -14,17 +14,15 @@ class Graph:
         np.fill_diagonal(affinity, np.inf)
 
         for i in range(n_nodes):
-            data_i = X[kmeans.labels_ == i]
             for j in range(i):
-                data_j = X[kmeans.labels_ == j]
-                data = np.vstack((data_i, data_j))
+                data = np.vstack((X[kmeans.labels_ == i], X[kmeans.labels_ == j]))
 
                 segment = kmeans.cluster_centers_[j] - kmeans.cluster_centers_[i]
                 projs = np.dot(data - kmeans.cluster_centers_[i], segment) / np.dot(segment, segment)
                 nearests = kmeans.cluster_centers_[i] + np.outer(np.clip(projs, 0, 1), segment)
                 diffs = data - nearests
                 inertia_segment = np.einsum('ij,ij->i', diffs, diffs).mean()
-                nearests = kmeans.cluster_centers_[i] + np.outer((projs > .5).astype(np.float64), segment)
+                nearests = kmeans.cluster_centers_[i] + np.outer(projs > .5, segment)
                 diffs = data - nearests
                 inertia_points = np.einsum('ij,ij->i', diffs, diffs).mean()
 
