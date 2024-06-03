@@ -17,17 +17,18 @@ class Graph:
             for j in range(i):
                 data = np.vstack((X[kmeans.labels_ == i], X[kmeans.labels_ == j]))
 
+                diffs_null = data - np.vstack((kmeans.cluster_centers_[i], kmeans.cluster_centers_[j]))[:, np.newaxis]
+                dists_null = np.min(np.einsum('ijk,ijk->ij', diffs_null, diffs_null), axis=0)
+                inertia_null = dists_null.mean()
+
                 segment = kmeans.cluster_centers_[j] - kmeans.cluster_centers_[i]
-                projs = np.dot(data - kmeans.cluster_centers_[i], segment) / np.dot(segment, segment)
-                nearests = kmeans.cluster_centers_[i] + np.outer(np.clip(projs, 0, 1), segment)
-                diffs = data - nearests
-                inertia_segment = np.einsum('ij,ij->i', diffs, diffs).mean()
-                nearests = kmeans.cluster_centers_[i] + np.outer(projs > .5, segment)
-                diffs = data - nearests
-                inertia_points = np.einsum('ij,ij->i', diffs, diffs).mean()
+                dots = np.dot(data - kmeans.cluster_centers_[i], segment) / np.dot(segment, segment)
+                projs = kmeans.cluster_centers_[i] + np.outer(np.clip(dots, 0, 1), segment)
+                diffs_alt = data - projs
+                dists_alt = np.einsum('ij,ij->i', diffs_alt, diffs_alt)
+                inertia_alt = dists_alt.mean()
 
-                affinity[i, j] += inertia_segment - inertia_points
-
+                affinity[i, j] += inertia_alt - inertia_null
 
         affinity = softmax((affinity + affinity.T) / -T)
         labels = SpectralClustering(n_clusters=self.n_classes, affinity='precomputed').fit_predict(affinity)
