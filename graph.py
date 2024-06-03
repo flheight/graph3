@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.metrics import pairwise_distances
-import matplotlib.pyplot as plt
 from scipy.special import softmax
 
 class Graph:
