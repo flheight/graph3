@@ -7,7 +7,7 @@ class Graph:
     def __init__(self, n_classes):
         self.n_classes = n_classes
 
-    def fit(self, X, n_nodes=18, lam=5e-2, M=1e16):
+    def fit(self, X, n_nodes, lam=5e-2, M=1e16):
         kmeans = KMeans(n_clusters=n_nodes).fit(X)
 
         affinity = .5 * lam * pairwise_distances(kmeans.cluster_centers_, metric='sqeuclidean')
