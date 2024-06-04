@@ -7,7 +7,7 @@ class Graph:
     def __init__(self, n_classes):
         self.n_classes = n_classes
 
-    def fit(self, X, n_nodes=12, lam=5e-2, T=1e-3):
+    def fit(self, X, n_nodes=18, lam=5e-2, M=1e16):
         kmeans = KMeans(n_clusters=n_nodes).fit(X)
 
         affinity = .5 * lam * pairwise_distances(kmeans.cluster_centers_, metric='sqeuclidean')
@@ -30,7 +30,14 @@ class Graph:
 
                 affinity[i, j] += inertia_alt - inertia_null
 
-        affinity = softmax((affinity + affinity.T) / -T)
+        affinity += affinity.T
+
+        q1 = np.quantile(affinity, .25)
+        q3 = np.quantile(affinity, .75)
+
+        gamma = np.log(M) / (q1 - q3)
+        affinity = softmax(gamma * affinity)
+
         labels = SpectralClustering(n_clusters=self.n_classes, affinity='precomputed').fit_predict(affinity)
         self.clusters = [kmeans.cluster_centers_[labels == i] for i in range(self.n_classes)]
 
